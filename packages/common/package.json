@@ -1,0 +1,39 @@
+{
+    "name": "@perp/common",
+    "version": "0.1.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "codegen-lushan": "typechain --target ethers-v5 --out-dir ./types/ethers '../../node_modules/@perp/lushan/artifacts/contracts/**/*.json'",
+        "codegen-uniswap": "typechain --target ethers-v5 --out-dir ./types/ethers-uniswap '../../node_modules/@uniswap/v3-core/artifacts/contracts/**/*.json'",
+        "codegen-extra": "typechain --target ethers-v5 --out-dir ./types/ethers-extra './abis/*.json'",
+        "codegen": "npm run codegen-lushan && npm run codegen-uniswap && npm run codegen-extra",
+        "compile": "tsc -b .",
+        "compile-watch": "tsc -b --watch .",
+        "build": "npm run codegen && npm run compile"
+    },
+    "dependencies": {
+        "@uniswap/v3-core": "1.0.0",
+        "async-mutex": "0.3.2",
+        "log4js": "6.3.0",
+        "big.js": "6.1.1",
+        "ethers": "5.4.2",
+        "lodash": "4.17.21",
+        "reflect-metadata": "0.1.13",
+        "typedi": "0.8.0",
+        "@ethersproject/providers": "5.4.3"
+    },
+    "devDependencies": {
+        "@testdeck/di-typedi": "0.0.10",
+        "@typechain/ethers-v5": "7.0.1",
+        "@types/big.js": "6.1.1",
+        "@types/lodash": "4.14.171",
+        "@types/node": "16.4.7",
+        "import-sort-style-module": "6.0.0",
+        "prettier-plugin-import-sort": "0.0.7",
+        "prettier": "2.3.2",
+        "ts-node": "10.1.0",
+        "typechain": "5.1.2",
+        "typescript": "4.3.5"
+    }
+}
