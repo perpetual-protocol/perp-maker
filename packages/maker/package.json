@@ -13,8 +13,7 @@
         "ethers": "5.4.2",
         "lodash": "4.17.21",
         "reflect-metadata": "0.1.13",
-        "typedi": "0.8.0",
-        "ftx-api-rest": "0.0.7"
+        "typedi": "0.8.0"
     },
     "devDependencies": {
         "@testdeck/di-typedi": "0.0.10",
