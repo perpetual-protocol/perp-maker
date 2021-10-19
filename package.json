@@ -1,0 +1,21 @@
+{
+    "name": "perp-maker",
+    "private": true,
+    "workspaces": [
+        "packages/*"
+    ],
+    "scripts": {
+        "build": "npm run build --workspace ./packages/common",
+        "start": "npm start --workspace ./packages/maker"
+    },
+    "dependencies": {
+        "@perp/lushan": "0.11.1"
+    },
+    "devDependencies": {},
+    "importSort": {
+        ".js, .jsx, .ts, .tsx": {
+            "style": "module",
+            "parser": "typescript"
+        }
+    }
+}

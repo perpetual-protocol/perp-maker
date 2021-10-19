@@ -1,0 +1,17 @@
+{
+    "PRICE_CHECK_INTERVAL_SEC": 10,
+    "MARKET_MAP": {
+        "vBTC": {
+            "IS_ENABLED": true,
+            "CURRENT_RANGE_LIQUIDITY_AMOUNT": 250000,
+            "CURRENT_RANGE_LIQUIDITY_RANGE_OFFSET": 0.05,
+            "CURRENT_RANGE_LIQUIDITY_ADJUST_THRESHOLD": 0.01
+        },
+        "vETH": {
+            "IS_ENABLED": true,
+            "CURRENT_RANGE_LIQUIDITY_AMOUNT": 250000,
+            "CURRENT_RANGE_LIQUIDITY_RANGE_OFFSET": 0.05,
+            "CURRENT_RANGE_LIQUIDITY_ADJUST_THRESHOLD": 0.01
+        }
+    }
+}
