@@ -1,9 +1,13 @@
 # Perp Maker
 
+A simple maker strategy for perpetual protocol v2.
+
 ## Requirement
 
 npm >= 7
 nodejs >= 16
+
+Since maker strategy will adjust your order, please make sure there's only 0 or 1 order in the account.
 
 ## Installation
 
