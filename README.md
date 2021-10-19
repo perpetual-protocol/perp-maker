@@ -22,8 +22,8 @@ npm run build
 
 ```bash
 # provide ENVs:
-# L2_WEB3_ENDPOINT
-# NETWORK
-# PRIVATE_KEY
+# L2_WEB3_ENDPOINT: web3 endpoint
+# NETWORK: arbitrum-rinkeby or rinkeby
+# PRIVATE_KEY: your private key
 npm run start
 ```
