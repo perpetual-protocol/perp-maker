@@ -36,7 +36,7 @@ npm run build
 # L2_WEB3_ENDPOINT: web3 endpoint
 # NETWORK: arbitrum-rinkeby or rinkeby
 # PRIVATE_KEY: your private key
-npm run start
+npm start
 ```
 
 ## Docker
