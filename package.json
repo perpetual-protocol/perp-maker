@@ -9,7 +9,7 @@
         "start": "npm start --workspace ./packages/maker"
     },
     "dependencies": {
-        "@perp/lushan": "0.11.1"
+        "@perp/lushan": "0.12.6"
     },
     "devDependencies": {},
     "importSort": {
