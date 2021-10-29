@@ -20,7 +20,7 @@ npm run build
 
 ## Configuration
 
-### Config File: `perp-maker/packages/maker/src/configs/config.json`
+#### Config File: `perp-maker/packages/maker/src/configs/config.json`
 
 -   `PRICE_CHECK_INTERVAL_SEC`: the frequency to check price in second
 -   `IS_ENABLED`: set to `true` to enable this market
