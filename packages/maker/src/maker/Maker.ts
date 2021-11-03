@@ -1,3 +1,4 @@
+import { min } from "@perp/common/build/lib/bn"
 import { priceToTick, sleep, tickToPrice } from "@perp/common/build/lib/helper"
 import { Log } from "@perp/common/build/lib/loggers"
 import { BotService } from "@perp/common/build/lib/perp/BotService"
@@ -151,6 +152,13 @@ export class Maker extends BotService {
     }
 
     async createCurrentRangeOrder(market: Market): Promise<OpenOrder> {
+        const buyingPower = await this.perpService.getBuyingPower(this.wallet.address)
+        const currentRangeLiquidityAmount = min([market.currentRangeLiquidityAmount, buyingPower])
+        if (currentRangeLiquidityAmount.lte(0)) {
+            this.log.jwarn({ event: "NoBuyingPowerToCreateCurrentRangeOrder", params: { buyingPower: +buyingPower } })
+            throw Error("NoBuyingPowerToCreateCurrentRangeOrder")
+        }
+
         const marketPrice = await this.perpService.getMarketPrice(market.poolAddr)
         const currentRangeLiquidityRangeOffset = market.currentRangeLiquidityRangeOffset
         const upperPrice = marketPrice.mul(Big(1).add(currentRangeLiquidityRangeOffset))
