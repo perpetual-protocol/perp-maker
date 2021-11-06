@@ -176,8 +176,8 @@ export class Maker extends BotService {
                 lowerTick,
             },
         })
-        const quote = market.currentRangeLiquidityAmount.div(2)
-        const base = market.currentRangeLiquidityAmount.div(2).div(marketPrice)
+        const quote = currentRangeLiquidityAmount.div(2)
+        const base = currentRangeLiquidityAmount.div(2).div(marketPrice)
         await this.addLiquidity(this.wallet, market.baseToken, lowerTick, upperTick, base, quote)
         const newOpenOrder = await this.perpService.getOpenOrder(
             this.wallet.address,
