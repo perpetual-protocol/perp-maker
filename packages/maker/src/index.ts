@@ -1,6 +1,6 @@
 import "reflect-metadata" // this shim is required
 
-import { initLog } from "@perp/common/build/lib/loggers"
+import { Log, initLog } from "@perp/common/build/lib/loggers"
 import { Container } from "typedi"
 
 import { Maker } from "./maker/Maker"
@@ -8,6 +8,27 @@ import { Maker } from "./maker/Maker"
 initLog()
 
 async function main(): Promise<void> {
+    // crash fast on uncaught errors
+    const exitUncaughtError = async (e: any): Promise<void> => {
+        const log = Log.getLogger("main")
+        try {
+            await log.error(
+                JSON.stringify({
+                    event: "UncaughtException",
+                    params: {
+                        error: e.toString(),
+                        stackTrace: e.stack,
+                    },
+                }),
+            )
+        } catch (e: any) {
+            console.log("exitUncaughtError error" + e.toString())
+        }
+        process.exit(1)
+    }
+    process.on("uncaughtException", err => exitUncaughtError(err))
+    process.on("unhandledRejection", reason => exitUncaughtError(reason))
+
     const maker = Container.get(Maker)
     await maker.setup()
     await maker.start()
