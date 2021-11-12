@@ -208,6 +208,7 @@ export class Maker extends BotService {
             openOrder.upperTick,
             openOrder.liquidity,
         )
+        await this.closePosition(this.wallet, market.baseToken)
     }
 
     async adjustCurrentRangeLiquidity(market: Market): Promise<void> {
