@@ -1,21 +1,20 @@
 import { Log as EthersLog } from "@ethersproject/abstract-provider"
 import { BlockTag } from "@ethersproject/providers"
+import { formatUnits, parseUnits } from "@ethersproject/units"
 import { UniswapV3Pool } from "@perp/common/types/ethers-uniswap"
 import AccountBalanceArtifact from "@perp/lushan/artifacts/contracts/AccountBalance.sol/AccountBalance.json"
 import BaseTokenArtifact from "@perp/lushan/artifacts/contracts/BaseToken.sol/BaseToken.json"
 import ClearingHouseArtifact from "@perp/lushan/artifacts/contracts/ClearingHouse.sol/ClearingHouse.json"
+import ClearingHouseConfigArtifact from "@perp/lushan/artifacts/contracts/ClearingHouseConfig.sol/ClearingHouseConfig.json"
 import ExchangeArtifact from "@perp/lushan/artifacts/contracts/Exchange.sol/Exchange.json"
 import QuoterArtifact from "@perp/lushan/artifacts/contracts/lens/Quoter.sol/Quoter.json"
 import MarketRegistryArtifact from "@perp/lushan/artifacts/contracts/MarketRegistry.sol/MarketRegistry.json"
 import OrderBookArtifact from "@perp/lushan/artifacts/contracts/OrderBook.sol/OrderBook.json"
 import VaultArtifact from "@perp/lushan/artifacts/contracts/Vault.sol/Vault.json"
 import VirtualTokenArtifact from "@perp/lushan/artifacts/contracts/VirtualToken.sol/VirtualToken.json"
-import metadataArbitrumRinkeby from "@perp/lushan/metadata/arbitrumRinkeby.json"
-import metadataRinkeby from "@perp/lushan/metadata/rinkeby.json"
 import UniswapV3PoolArtifact from "@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json"
 import Big from "big.js"
 import { BigNumber, Signer, ethers } from "ethers"
-import { formatEther, parseEther } from "ethers/lib/utils"
 import { get } from "lodash"
 import { Service } from "typedi"
 
@@ -24,6 +23,7 @@ import {
     AccountBalance,
     BaseToken,
     ClearingHouse,
+    ClearingHouseConfig,
     Exchange,
     MarketRegistry,
     OrderBook,
@@ -36,11 +36,16 @@ import { sum } from "../bn"
 import { L2EthService } from "../eth/L2EthService"
 import { BNToBig, BigToBN, sqrtPriceX96ToPrice } from "../helper"
 import { Log } from "../loggers"
+import { ServerProfile } from "../profile/ServerProfile"
 import { Metadata } from "../types"
 
 export enum EventType {
     POSITION_CHANGED = "positionChanged",
+    POSITION_LIQUIDATED = "positionLiquidated",
     LIQUIDITY_CHANGED = "liquidityChanged",
+    FUNDING_PAYMENT_SETTLED = "fundingPaymentSettled",
+    DEPOSITED = "deposited",
+    WITHDRAWN = "withdrawn",
 }
 export enum Side {
     SHORT = "short",
@@ -70,6 +75,15 @@ export interface PositionChangedLog extends EventLog {
     priceAfter: Big
 }
 
+export interface PositionLiquidatedLog extends EventLog {
+    trader: string
+    baseToken: string
+    positionNotional: Big
+    positionSize: Big
+    liquidationFee: Big
+    liquidator: string
+}
+
 export interface LiquidityChangedLog extends EventLog {
     maker: string
     baseToken: string
@@ -80,6 +94,29 @@ export interface LiquidityChangedLog extends EventLog {
     quote: Big
     liquidity: Big
     quoteFee: Big
+}
+
+export interface FundingPaymentSettledLog extends EventLog {
+    trader: string
+    baseToken: string
+    fundingPayment: Big
+}
+
+export interface DepositedLog extends EventLog {
+    collateralToken: string
+    trader: string
+    amount: Big
+}
+
+export interface WithdrawnLog extends EventLog {
+    token: string
+    to: string
+    amount: Big
+}
+
+export interface PnlRealizedLog extends EventLog {
+    trader: string
+    amount: Big
 }
 
 interface SwapResponse {
@@ -102,26 +139,21 @@ export interface OpenOrder {
 export class PerpService {
     readonly log = Log.getLogger(PerpService.name)
     readonly metadata: Metadata
+    private _testUSDCDecimals: number | undefined
+    private _vaultDecimals: number | undefined
 
-    constructor(readonly ethService: L2EthService) {
-        // Webpack doesn't support load json files dynamically in runtime,
-        // so we must import both metadataStaging and metadataProduction
-        // FIXME: use metadataProduction if production
-        if (process.env.NETWORK === "rinkeby") {
-            this.metadata = metadataRinkeby as unknown as Metadata
-        } else if (process.env.NETWORK === "arbitrum-rinkeby") {
-            this.metadata = metadataArbitrumRinkeby as unknown as Metadata
-        } else {
-            throw Error("cannot find appropriate metadata")
-        }
+    // Webpack doesn't support load json files dynamically in runtime,
+    // so we must import both metadataStaging and metadataProduction
+    constructor(readonly ethService: L2EthService, readonly serverProfile: ServerProfile) {
+        this.metadata = serverProfile.metadata
     }
 
-    static fromWei(wei: BigNumber): Big {
-        return Big(formatEther(wei))
+    static fromWei(value: BigNumber, decimals = 18): Big {
+        return Big(formatUnits(value, decimals).toString())
     }
 
-    static toWei(val: Big): BigNumber {
-        return parseEther(val.toFixed(18))
+    static toWei(value: Big, decimals = 18): BigNumber {
+        return parseUnits(value.toFixed(decimals), decimals)
     }
 
     createTestUSDC(signer?: Signer): TestERC20 {
@@ -142,6 +174,11 @@ export class PerpService {
     createClearingHouse(signer?: Signer): ClearingHouse {
         const address = get(this.metadata, "contracts.ClearingHouse.address") as string
         return this.ethService.createContract<ClearingHouse>(address, ClearingHouseArtifact.abi, signer)
+    }
+
+    createClearingHouseConfig(signer?: Signer): ClearingHouseConfig {
+        const address = get(this.metadata, "contracts.ClearingHouseConfig.address") as string
+        return this.ethService.createContract<ClearingHouseConfig>(address, ClearingHouseConfigArtifact.abi, signer)
     }
 
     createAccountBalance(signer?: Signer): AccountBalance {
@@ -180,6 +217,22 @@ export class PerpService {
         return this.metadata.pools.map(pool => pool.baseAddress)
     }
 
+    async getTestUSDCDecimals() {
+        if (this._testUSDCDecimals === undefined) {
+            const testUSDC = this.createTestUSDC()
+            this._testUSDCDecimals = await testUSDC.decimals()
+        }
+        return this._testUSDCDecimals
+    }
+
+    async getVaultDecimals() {
+        if (this._vaultDecimals === undefined) {
+            const vault = this.createVault()
+            this._vaultDecimals = await vault.decimals()
+        }
+        return this._vaultDecimals
+    }
+
     async getBaseTokens(trader: string): Promise<string[]> {
         const accountBalance = this.createAccountBalance()
         return await accountBalance.getBaseTokens(trader)
@@ -187,15 +240,19 @@ export class PerpService {
 
     async getUSDCBalance(trader: string): Promise<Big> {
         const testUSDC = this.createTestUSDC()
-        return PerpService.fromWei(await testUSDC.balanceOf(trader))
+        return PerpService.fromWei(await testUSDC.balanceOf(trader), await this.getTestUSDCDecimals())
     }
 
-    async getPositionChangedLogs(fromBlock: BlockTag, toBlock: BlockTag): Promise<PositionChangedLog[]> {
+    async getPositionChangedLogs(
+        fromBlock: BlockTag,
+        toBlock: BlockTag,
+        trader: string | null = null,
+    ): Promise<PositionChangedLog[]> {
         const exchange = this.createExchange()
         const filter = {
             fromBlock: fromBlock,
             toBlock: toBlock,
-            ...exchange.filters.PositionChanged(null, null, null, null, null, null, null, null),
+            ...exchange.filters.PositionChanged(trader, null, null, null, null, null, null, null),
         }
         return (await this.ethService.provider.getLogs(filter)).map((log: EthersLog) => {
             const {
@@ -226,12 +283,46 @@ export class PerpService {
         })
     }
 
-    async getLiquidityChangedLogs(fromBlock: BlockTag, toBlock: BlockTag): Promise<LiquidityChangedLog[]> {
+    async getPositionLiquidatedLogs(
+        fromBlock: BlockTag,
+        toBlock: BlockTag,
+        trader: string | null = null,
+    ): Promise<PositionLiquidatedLog[]> {
+        const clearingHouse = this.createClearingHouse()
+        const filter = {
+            fromBlock: fromBlock,
+            toBlock: toBlock,
+            ...clearingHouse.filters.PositionLiquidated(trader),
+        }
+        return (await this.ethService.provider.getLogs(filter)).map((log: EthersLog) => {
+            const { trader, baseToken, positionNotional, positionSize, liquidationFee, liquidator } =
+                clearingHouse.interface.parseLog(log).args
+            return {
+                trader,
+                baseToken,
+                positionNotional: PerpService.fromWei(positionNotional),
+                positionSize: PerpService.fromWei(positionSize),
+                liquidationFee: PerpService.fromWei(liquidationFee),
+                liquidator,
+                blockNumber: log.blockNumber,
+                logIndex: log.logIndex,
+                txHash: log.transactionHash,
+                eventType: EventType.POSITION_LIQUIDATED,
+                eventSource: clearingHouse.address,
+            }
+        })
+    }
+
+    async getLiquidityChangedLogs(
+        fromBlock: BlockTag,
+        toBlock: BlockTag,
+        maker: string | null = null,
+    ): Promise<LiquidityChangedLog[]> {
         const orderBook = this.createOrderBook()
         const filter = {
             fromBlock: fromBlock,
             toBlock: toBlock,
-            ...orderBook.filters.LiquidityChanged(),
+            ...orderBook.filters.LiquidityChanged(maker),
         }
         return (await this.ethService.provider.getLogs(filter)).map((log: EthersLog) => {
             const { maker, baseToken, quoteToken, lowerTick, upperTick, base, quote, liquidity, quoteFee } =
@@ -251,6 +342,111 @@ export class PerpService {
                 txHash: log.transactionHash,
                 eventType: EventType.LIQUIDITY_CHANGED,
                 eventSource: orderBook.address,
+            }
+        })
+    }
+
+    async getFundingPaymentSettledLogs(
+        fromBlock: BlockTag,
+        toBlock: BlockTag,
+        trader: string | null = null,
+    ): Promise<FundingPaymentSettledLog[]> {
+        const exchange = this.createExchange()
+        const filter = {
+            fromBlock: fromBlock,
+            toBlock: toBlock,
+            ...exchange.filters.FundingPaymentSettled(trader),
+        }
+        return (await this.ethService.provider.getLogs(filter)).map((log: EthersLog) => {
+            const { trader, baseToken, fundingPayment } = exchange.interface.parseLog(log).args
+            return {
+                trader,
+                baseToken,
+                fundingPayment: PerpService.fromWei(fundingPayment),
+                blockNumber: log.blockNumber,
+                logIndex: log.logIndex,
+                txHash: log.transactionHash,
+                eventType: EventType.FUNDING_PAYMENT_SETTLED,
+                eventSource: exchange.address,
+            }
+        })
+    }
+
+    async getDepositedLogs(
+        fromBlock: BlockTag,
+        toBlock: BlockTag,
+        trader: string | null = null,
+    ): Promise<DepositedLog[]> {
+        const vault = this.createVault()
+        const decimals = await vault.decimals()
+        const filter = {
+            fromBlock: fromBlock,
+            toBlock: toBlock,
+            ...vault.filters.Deposited(null, trader),
+        }
+        return (await this.ethService.provider.getLogs(filter)).map((log: EthersLog) => {
+            const { collateralToken, trader, amount } = vault.interface.parseLog(log).args
+            return {
+                collateralToken,
+                trader,
+                amount: PerpService.fromWei(amount, decimals),
+                blockNumber: log.blockNumber,
+                logIndex: log.logIndex,
+                txHash: log.transactionHash,
+                eventType: EventType.DEPOSITED,
+                eventSource: vault.address,
+            }
+        })
+    }
+
+    async getWithdrawnLogs(
+        fromBlock: BlockTag,
+        toBlock: BlockTag,
+        trader: string | null = null,
+    ): Promise<WithdrawnLog[]> {
+        const vault = this.createVault()
+        const decimals = await vault.decimals()
+        const filter = {
+            fromBlock: fromBlock,
+            toBlock: toBlock,
+            ...vault.filters.Withdrawn(null, trader),
+        }
+        return (await this.ethService.provider.getLogs(filter)).map((log: EthersLog) => {
+            const { token, to, amount } = vault.interface.parseLog(log).args
+            return {
+                token,
+                to,
+                amount: PerpService.fromWei(amount, decimals),
+                blockNumber: log.blockNumber,
+                logIndex: log.logIndex,
+                txHash: log.transactionHash,
+                eventType: EventType.WITHDRAWN,
+                eventSource: vault.address,
+            }
+        })
+    }
+
+    async getPnlRealizedLogs(
+        fromBlock: BlockTag,
+        toBlock: BlockTag,
+        trader: string | null = null,
+    ): Promise<PnlRealizedLog[]> {
+        const accountBalance = this.createAccountBalance()
+        const filter = {
+            fromBlock: fromBlock,
+            toBlock: toBlock,
+            ...accountBalance.filters.PnlRealized(trader),
+        }
+        return (await this.ethService.provider.getLogs(filter)).map((log: EthersLog) => {
+            const { trader, amount } = accountBalance.interface.parseLog(log).args
+            return {
+                trader,
+                amount: PerpService.fromWei(amount),
+                blockNumber: log.blockNumber,
+                logIndex: log.logIndex,
+                txHash: log.transactionHash,
+                eventType: EventType.WITHDRAWN,
+                eventSource: accountBalance.address,
             }
         })
     }
@@ -275,12 +471,12 @@ export class PerpService {
 
     async getBalance(trader: string): Promise<Big> {
         const vault = this.createVault()
-        return PerpService.fromWei(await vault.balanceOf(trader))
+        return PerpService.fromWei(await vault.balanceOf(trader), await this.getVaultDecimals())
     }
 
     async getFreeCollateral(trader: string): Promise<Big> {
         const vault = this.createVault()
-        return PerpService.fromWei(await vault.getFreeCollateral(trader))
+        return PerpService.fromWei(await vault.getFreeCollateral(trader), await this.getVaultDecimals())
     }
 
     async getAccountValue(trader: string): Promise<Big> {
@@ -333,6 +529,11 @@ export class PerpService {
     async getQuote(trader: string, baseToken: string): Promise<Big> {
         const accountBalance = this.createAccountBalance()
         return PerpService.fromWei(await accountBalance.getQuote(trader, baseToken))
+    }
+
+    async getBase(trader: string, baseToken: string): Promise<Big> {
+        const accountBalance = this.createAccountBalance()
+        return PerpService.fromWei(await accountBalance.getBase(trader, baseToken))
     }
 
     async getBuyingPower(trader: string): Promise<Big> {
@@ -486,5 +687,10 @@ export class PerpService {
             uniswapFeeRatio: +ret.uniswapFeeRatio,
             insuranceFundFeeRatio: +ret.insuranceFundFeeRatio,
         }
+    }
+
+    async getPendingFundingPayment(trader: string, baseToken: string): Promise<Big> {
+        const exchange = this.createExchange()
+        return PerpService.fromWei(await exchange.getPendingFundingPayment(trader, baseToken))
     }
 }
