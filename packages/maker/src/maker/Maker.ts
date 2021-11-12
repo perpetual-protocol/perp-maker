@@ -89,6 +89,8 @@ export class Maker extends BotService {
         while (true) {
             // TODO: use Promise.all()
             for (const market of Object.values(this.marketMap)) {
+                const buyingPower = await this.perpService.getBuyingPower(this.wallet.address)
+                console.log(+buyingPower)
                 try {
                     await this.refreshCurrentRangeOrders(market)
                     await this.adjustCurrentRangeLiquidity(market)
