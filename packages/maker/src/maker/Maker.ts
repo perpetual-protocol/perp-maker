@@ -82,23 +82,6 @@ export class Maker extends BotService {
             await this.approve(this.wallet, balance)
             await this.deposit(this.wallet, balance)
         }
-        for (const market of Object.values(this.marketMap)) {
-            const openOrders = await this.perpService.getOpenOrders(this.wallet.address, market.baseToken)
-            if (openOrders.length > 1) {
-                throw Error("account has more than 1 orders")
-            }
-            for (const openOrder of openOrders) {
-                this.log.jinfo({
-                    event: "GetOpenOrders",
-                    params: {
-                        market: market.name,
-                        lowerPrice: tickToPrice(openOrder.lowerTick),
-                        upperPrice: tickToPrice(openOrder.upperTick),
-                    },
-                })
-            }
-            await this.refreshCurrentRangeOrders(market, openOrders)
-        }
         this.makerRoutine()
     }
 
@@ -107,6 +90,7 @@ export class Maker extends BotService {
             // TODO: use Promise.all()
             for (const market of Object.values(this.marketMap)) {
                 try {
+                    await this.refreshCurrentRangeOrders(market)
                     await this.adjustCurrentRangeLiquidity(market)
                 } catch (err: any) {
                     await this.log.jerror({
@@ -119,8 +103,22 @@ export class Maker extends BotService {
         }
     }
 
-    async refreshCurrentRangeOrders(market: Market, currentRangeOrders: OpenOrder[]) {
-        switch (currentRangeOrders.length) {
+    async refreshCurrentRangeOrders(market: Market) {
+        const openOrders = await this.perpService.getOpenOrders(this.wallet.address, market.baseToken)
+        if (openOrders.length > 1) {
+            throw Error("account has more than 1 orders")
+        }
+        for (const openOrder of openOrders) {
+            this.log.jinfo({
+                event: "GetOpenOrders",
+                params: {
+                    market: market.name,
+                    lowerPrice: tickToPrice(openOrder.lowerTick),
+                    upperPrice: tickToPrice(openOrder.upperTick),
+                },
+            })
+        }
+        switch (openOrders.length) {
             case 0: {
                 // create a new current range order
                 this.marketCurrentOrderMap[market.name] = await this.createCurrentRangeOrder(market)
@@ -128,12 +126,12 @@ export class Maker extends BotService {
             }
             case 1: {
                 // set the current range order
-                this.marketCurrentOrderMap[market.name] = currentRangeOrders[0]
+                this.marketCurrentOrderMap[market.name] = openOrders[0]
                 break
             }
             default: {
                 // abnormal case, remove all current range orders manually
-                await this.log.jerror({ event: "InitializeError", params: { currentRangeOrders } })
+                await this.log.jerror({ event: "RefreshCurrentRangeOrderError", params: { openOrders } })
                 //await Promise.all(currentRangeOrders.map(order => this.removeCurrentRangeOrder(market, order)))
                 process.exit(0)
             }

@@ -60,7 +60,7 @@ export abstract class BotService {
                 })
                 return tx
             } catch (err: any) {
-                if (err.code === "NONCE_EXPIRED") {
+                if (err.code === "NONCE_EXPIRED" || err.message.includes("invalid transaction nonce")) {
                     const expiredNonce = nonceMutex.nextNonce
                     nonceMutex.nextNonce = await wallet.getTransactionCount()
                     this.log.jinfo({

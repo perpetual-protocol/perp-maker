@@ -12,6 +12,7 @@ import MarketRegistryArtifact from "@perp/lushan/artifacts/contracts/MarketRegis
 import OrderBookArtifact from "@perp/lushan/artifacts/contracts/OrderBook.sol/OrderBook.json"
 import VaultArtifact from "@perp/lushan/artifacts/contracts/Vault.sol/Vault.json"
 import VirtualTokenArtifact from "@perp/lushan/artifacts/contracts/VirtualToken.sol/VirtualToken.json"
+import arbitrumRinkebyMetadata from "@perp/lushan/metadata/arbitrumRinkeby.json"
 import UniswapV3PoolArtifact from "@uniswap/v3-core/artifacts/contracts/UniswapV3Pool.sol/UniswapV3Pool.json"
 import Big from "big.js"
 import { BigNumber, Signer, ethers } from "ethers"
@@ -36,7 +37,6 @@ import { sum } from "../bn"
 import { L2EthService } from "../eth/L2EthService"
 import { BNToBig, BigToBN, sqrtPriceX96ToPrice } from "../helper"
 import { Log } from "../loggers"
-import { ServerProfile } from "../profile/ServerProfile"
 import { Metadata } from "../types"
 
 export enum EventType {
@@ -144,8 +144,8 @@ export class PerpService {
 
     // Webpack doesn't support load json files dynamically in runtime,
     // so we must import both metadataStaging and metadataProduction
-    constructor(readonly ethService: L2EthService, readonly serverProfile: ServerProfile) {
-        this.metadata = serverProfile.metadata
+    constructor(readonly ethService: L2EthService) {
+        this.metadata = arbitrumRinkebyMetadata as unknown as Metadata
     }
 
     static fromWei(value: BigNumber, decimals = 18): Big {
