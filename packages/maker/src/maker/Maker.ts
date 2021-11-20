@@ -90,6 +90,15 @@ export class Maker extends BotService {
             // TODO: use Promise.all()
             for (const market of Object.values(this.marketMap)) {
                 try {
+                    const gasPrice = await this.ethService.getGasPrice()
+                    const adjustMaxGasPrice = Big(config.ADJUST_MAX_GAS_PRICE_GWEI)
+                    if (gasPrice.gt(adjustMaxGasPrice)) {
+                        this.log.jwarn({
+                            event: "GasPriceExceed",
+                            params: { gasPrice: +gasPrice, maxGasPrice: +adjustMaxGasPrice },
+                        })
+                        continue
+                    }
                     await this.refreshCurrentRangeOrders(market)
                     await this.adjustCurrentRangeLiquidity(market)
                 } catch (err: any) {
