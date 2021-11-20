@@ -1,5 +1,6 @@
 {
     "PRICE_CHECK_INTERVAL_SEC": 10,
+    "ADJUST_MAX_GAS_PRICE_GWEI": 100,
     "MARKET_MAP": {
         "vBTC": {
             "IS_ENABLED": true,

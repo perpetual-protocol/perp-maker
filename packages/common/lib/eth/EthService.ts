@@ -60,6 +60,10 @@ export class EthService {
         return new ethers.Contract(address, abi, signer ? signer : this.provider) as unknown as T
     }
 
+    async getGasPrice() {
+        return Big(ethers.utils.formatUnits(await this.provider.getGasPrice(), "gwei"))
+    }
+
     static fromWei(value: BigNumber, decimals = 18): Big {
         return Big(formatUnits(value, decimals).toString())
     }
