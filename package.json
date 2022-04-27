@@ -5,12 +5,10 @@
     "main": "index.js",
     "scripts": {
         "start": "ts-node src/index.ts",
-        "build:common": "cd node_modules/@perp/common && npm run build",
-        "build": "npm run build:common && tsc -b .",
-        "postinstall": "npm run build"
+        "build": "tsc -b ."
     },
     "dependencies": {
-        "@perp/common": "0.1.3"
+        "@perp/common": "0.1.5"
     },
     "devDependencies": {
         "typechain": "5.1.2",
