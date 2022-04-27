@@ -14,13 +14,13 @@ Since maker strategy will adjust your order, please make sure there's only 0 or 
 ```bash
 git clone https://github.com/perpetual-protocol/perp-maker.git
 cd perp-maker
-npm i
+npm i --legacy-peer-deps
 npm run build
 ```
 
 ## Configuration
 
-#### Config File: `perp-maker/packages/maker/src/configs/config.json`
+#### Config File: `perp-maker/src/configs/config.json`
 
 -   `PRICE_CHECK_INTERVAL_SEC`: the frequency to check price in second
 -   `IS_ENABLED`: set to `true` to enable this market
