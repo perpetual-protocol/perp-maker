@@ -34,7 +34,7 @@ npm run build
 # remember to update config before running
 # provide ENVs:
 # L2_WEB3_ENDPOINT: web3 endpoint
-# NETWORK: arbitrum-rinkeby or rinkeby
+# NETWORK: optimism or optimism-kovan
 # PRIVATE_KEY: your private key
 npm start
 ```
@@ -43,5 +43,5 @@ npm start
 
 ```bash
 docker build -f maker.Dockerfile -t perp-maker .
-docker run -e L2_WEB3_ENDPOINT=<ENDPOINT> -e NETWORK=<arbitrum-rinkeby or rinkeby> -e PRIVATE_KEY=<YOUR_PRIVATE_KEY> perp-maker
+docker run -e L2_WEB3_ENDPOINT=<ENDPOINT> -e NETWORK=<optimism or optimism-kovan> -e PRIVATE_KEY=<YOUR_PRIVATE_KEY> perp-maker
 ```

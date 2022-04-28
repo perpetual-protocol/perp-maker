@@ -8,7 +8,7 @@
         "build": "tsc -b ."
     },
     "dependencies": {
-        "@perp/common": "0.1.5"
+        "@perp/common": "0.1.9"
     },
     "devDependencies": {
         "typechain": "5.1.2",

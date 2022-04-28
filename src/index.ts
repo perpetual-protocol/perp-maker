@@ -1,6 +1,6 @@
 import "reflect-metadata" // this shim is required
 
-import { Log, initLog } from "@perp/common/lib/loggers"
+import { Log, initLog } from "@perp/common/build/lib/loggers"
 import { Container } from "typedi"
 
 import { Maker } from "./maker/Maker"
