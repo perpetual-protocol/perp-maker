@@ -17,8 +17,8 @@ interface Market {
     // config
     // maker
     liquidityAmount: Big
-    liquidityRangeOffset: Big
-    liquidityAdjustThreshold: Big
+    liquidityRangeMultiplier: Big
+    liquidityAdjustMultiplier: Big
 }
 
 @Service()
@@ -67,8 +67,8 @@ export class Maker extends BotService {
                 // config
                 // maker
                 liquidityAmount: Big(market.LIQUIDITY_AMOUNT),
-                liquidityRangeOffset: Big(market.LIQUIDITY_RANGE_OFFSET),
-                liquidityAdjustThreshold: Big(market.LIQUIDITY_ADJUST_THRESHOLD),
+                liquidityRangeMultiplier: Big(market.LIQUIDITY_RANGE_OFFSET).add(1),
+                liquidityAdjustMultiplier: Big(market.LIQUIDITY_ADJUST_THRESHOLD).add(1),
             }
         }
     }
@@ -152,11 +152,12 @@ export class Maker extends BotService {
         const marketPrice = await this.perpService.getMarketPrice(market.poolAddr)
         const upperPrice = tickToPrice(openOrder.upperTick)
         const lowerPrice = tickToPrice(openOrder.lowerTick)
-        const liquidityAdjustThreshold = market.liquidityAdjustThreshold
-        return (
-            marketPrice.lt(upperPrice.mul(Big(1).minus(liquidityAdjustThreshold))) &&
-            marketPrice.gt(lowerPrice.mul(Big(1).add(liquidityAdjustThreshold)))
-        )
+        // since upper price = central price * range multiplier, lower price = central price / range multiplier
+        // central price = sqrt(upper price * lower price)
+        const centralPrice = upperPrice.mul(lowerPrice).sqrt()
+        const upperAdjustPrice = centralPrice.mul(market.liquidityAdjustMultiplier)
+        const lowerAdjustPrice = centralPrice.div(market.liquidityAdjustMultiplier)
+        return marketPrice.gt(lowerAdjustPrice) && marketPrice.lt(upperAdjustPrice)
     }
 
     async createOrder(market: Market): Promise<OpenOrder> {
@@ -168,9 +169,8 @@ export class Maker extends BotService {
         }
 
         const marketPrice = await this.perpService.getMarketPrice(market.poolAddr)
-        const liquidityRangeOffset = market.liquidityRangeOffset
-        const upperPrice = marketPrice.mul(Big(1).add(liquidityRangeOffset))
-        const lowerPrice = marketPrice.mul(Big(1).minus(liquidityRangeOffset))
+        const upperPrice = marketPrice.mul(market.liquidityRangeMultiplier)
+        const lowerPrice = marketPrice.div(market.liquidityRangeMultiplier)
         const upperTick = priceToTick(upperPrice, market.tickSpacing)
         const lowerTick = priceToTick(lowerPrice, market.tickSpacing)
         this.log.jinfo({
