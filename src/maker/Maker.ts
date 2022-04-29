@@ -16,9 +16,9 @@ interface Market {
     tickSpacing: number
     // config
     // maker
-    currentRangeLiquidityAmount: Big
-    currentRangeLiquidityRangeOffset: Big
-    currentRangeLiquidityAdjustThreshold: Big
+    liquidityAmount: Big
+    liquidityRangeOffset: Big
+    liquidityAdjustThreshold: Big
 }
 
 @Service()
@@ -27,7 +27,7 @@ export class Maker extends BotService {
 
     private wallet!: ethers.Wallet
     private marketMap: { [key: string]: Market } = {}
-    private marketCurrentOrderMap: { [key: string]: OpenOrder } = {}
+    private marketOrderMap: { [key: string]: OpenOrder } = {}
 
     async setup(): Promise<void> {
         this.log.jinfo({
@@ -66,9 +66,9 @@ export class Maker extends BotService {
                 tickSpacing: await this.perpService.getTickSpacing(pool.address),
                 // config
                 // maker
-                currentRangeLiquidityAmount: Big(market.CURRENT_RANGE_LIQUIDITY_AMOUNT),
-                currentRangeLiquidityRangeOffset: Big(market.CURRENT_RANGE_LIQUIDITY_RANGE_OFFSET),
-                currentRangeLiquidityAdjustThreshold: Big(market.CURRENT_RANGE_LIQUIDITY_ADJUST_THRESHOLD),
+                liquidityAmount: Big(market.LIQUIDITY_AMOUNT),
+                liquidityRangeOffset: Big(market.LIQUIDITY_RANGE_OFFSET),
+                liquidityAdjustThreshold: Big(market.LIQUIDITY_ADJUST_THRESHOLD),
             }
         }
     }
@@ -97,11 +97,11 @@ export class Maker extends BotService {
                         })
                         continue
                     }
-                    await this.refreshCurrentRangeOrders(market)
-                    await this.adjustCurrentRangeLiquidity(market)
+                    await this.refreshOrders(market)
+                    await this.adjustLiquidity(market)
                 } catch (err: any) {
                     await this.log.jerror({
-                        event: "AdjustCurrentRangeLiquidityError",
+                        event: "AdjustLiquidityError",
                         params: { err: err.toString() },
                     })
                 }
@@ -110,7 +110,7 @@ export class Maker extends BotService {
         }
     }
 
-    async refreshCurrentRangeOrders(market: Market) {
+    async refreshOrders(market: Market) {
         const openOrders = await this.perpService.getOpenOrders(this.wallet.address, market.baseToken)
         if (openOrders.length > 1) {
             throw Error("account has more than 1 orders")
@@ -127,54 +127,54 @@ export class Maker extends BotService {
         }
         switch (openOrders.length) {
             case 0: {
-                // create a new current range order
-                this.marketCurrentOrderMap[market.name] = await this.createCurrentRangeOrder(market)
+                // create a new order
+                this.marketOrderMap[market.name] = await this.createOrder(market)
                 break
             }
             case 1: {
-                // set the current range order
-                this.marketCurrentOrderMap[market.name] = openOrders[0]
+                // set the order
+                this.marketOrderMap[market.name] = openOrders[0]
                 break
             }
             default: {
-                // abnormal case, remove all current range orders manually
+                // abnormal case, remove all orders manually
                 await this.log.jerror({
                     event: "RefreshOrderError",
                     params: { err: new Error("RefreshOrderError"), openOrders },
                 })
-                //await Promise.all(currentRangeOrders.map(order => this.removeCurrentRangeOrder(market, order)))
+                //await Promise.all(orders.map(order => this.removeOrder(market, order)))
                 process.exit(0)
             }
         }
     }
 
-    async isValidCurrentRangeOrder(market: Market, openOrder: OpenOrder): Promise<boolean> {
+    async isValidOrder(market: Market, openOrder: OpenOrder): Promise<boolean> {
         const marketPrice = await this.perpService.getMarketPrice(market.poolAddr)
         const upperPrice = tickToPrice(openOrder.upperTick)
         const lowerPrice = tickToPrice(openOrder.lowerTick)
-        const currentRangeLiquidityAdjustThreshold = market.currentRangeLiquidityAdjustThreshold
+        const liquidityAdjustThreshold = market.liquidityAdjustThreshold
         return (
-            marketPrice.lt(upperPrice.mul(Big(1).minus(currentRangeLiquidityAdjustThreshold))) &&
-            marketPrice.gt(lowerPrice.mul(Big(1).add(currentRangeLiquidityAdjustThreshold)))
+            marketPrice.lt(upperPrice.mul(Big(1).minus(liquidityAdjustThreshold))) &&
+            marketPrice.gt(lowerPrice.mul(Big(1).add(liquidityAdjustThreshold)))
         )
     }
 
-    async createCurrentRangeOrder(market: Market): Promise<OpenOrder> {
+    async createOrder(market: Market): Promise<OpenOrder> {
         const buyingPower = await this.perpService.getBuyingPower(this.wallet.address)
-        const currentRangeLiquidityAmount = min([market.currentRangeLiquidityAmount, buyingPower])
-        if (currentRangeLiquidityAmount.lte(0)) {
-            this.log.jwarn({ event: "NoBuyingPowerToCreateCurrentRangeOrder", params: { buyingPower: +buyingPower } })
-            throw Error("NoBuyingPowerToCreateCurrentRangeOrder")
+        const liquidityAmount = min([market.liquidityAmount, buyingPower])
+        if (liquidityAmount.lte(0)) {
+            this.log.jwarn({ event: "NoBuyingPowerToCreateOrder", params: { buyingPower: +buyingPower } })
+            throw Error("NoBuyingPowerToCreateOrder")
         }
 
         const marketPrice = await this.perpService.getMarketPrice(market.poolAddr)
-        const currentRangeLiquidityRangeOffset = market.currentRangeLiquidityRangeOffset
-        const upperPrice = marketPrice.mul(Big(1).add(currentRangeLiquidityRangeOffset))
-        const lowerPrice = marketPrice.mul(Big(1).minus(currentRangeLiquidityRangeOffset))
+        const liquidityRangeOffset = market.liquidityRangeOffset
+        const upperPrice = marketPrice.mul(Big(1).add(liquidityRangeOffset))
+        const lowerPrice = marketPrice.mul(Big(1).minus(liquidityRangeOffset))
         const upperTick = priceToTick(upperPrice, market.tickSpacing)
         const lowerTick = priceToTick(lowerPrice, market.tickSpacing)
         this.log.jinfo({
-            event: "CreateCurrentRangeOrder",
+            event: "CreateOrder",
             params: {
                 market: market.name,
                 marketPrice: +marketPrice,
@@ -184,8 +184,8 @@ export class Maker extends BotService {
                 lowerTick,
             },
         })
-        const quote = currentRangeLiquidityAmount.div(2)
-        const base = currentRangeLiquidityAmount.div(2).div(marketPrice)
+        const quote = liquidityAmount.div(2)
+        const base = liquidityAmount.div(2).div(marketPrice)
         await this.addLiquidity(this.wallet, market.baseToken, lowerTick, upperTick, base, quote, false)
         const newOpenOrder = await this.perpService.getOpenOrder(
             this.wallet.address,
@@ -202,9 +202,9 @@ export class Maker extends BotService {
         }
     }
 
-    async removeCurrentRangeOrder(market: Market, openOrder: OpenOrder): Promise<void> {
+    async removeOrder(market: Market, openOrder: OpenOrder): Promise<void> {
         this.log.jinfo({
-            event: "RemoveCurrentRangeOrder",
+            event: "RemoveOrder",
             params: {
                 market: market.name,
                 upperPrice: +tickToPrice(openOrder.upperTick),
@@ -221,20 +221,20 @@ export class Maker extends BotService {
         await this.closePosition(this.wallet, market.baseToken)
     }
 
-    async adjustCurrentRangeLiquidity(market: Market): Promise<void> {
-        const currentOrder = this.marketCurrentOrderMap[market.name]
+    async adjustLiquidity(market: Market): Promise<void> {
+        const order = this.marketOrderMap[market.name]
         this.log.jinfo({
-            event: "AdjustCurrentRangeOrder",
+            event: "AdjustOrder",
             params: {
                 market: market.name,
-                upperPrice: +tickToPrice(currentOrder.upperTick),
-                lowerPrice: +tickToPrice(currentOrder.lowerTick),
+                upperPrice: +tickToPrice(order.upperTick),
+                lowerPrice: +tickToPrice(order.lowerTick),
             },
         })
-        if (!(await this.isValidCurrentRangeOrder(market, currentOrder))) {
-            await this.removeCurrentRangeOrder(market, currentOrder)
-            const newOpenOrder = await this.createCurrentRangeOrder(market)
-            this.marketCurrentOrderMap[market.name] = newOpenOrder
+        if (!(await this.isValidOrder(market, order))) {
+            await this.removeOrder(market, order)
+            const newOpenOrder = await this.createOrder(market)
+            this.marketOrderMap[market.name] = newOpenOrder
         }
     }
 }

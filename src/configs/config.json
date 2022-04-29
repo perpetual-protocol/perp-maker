@@ -4,15 +4,15 @@
     "MARKET_MAP": {
         "vBTC": {
             "IS_ENABLED": true,
-            "CURRENT_RANGE_LIQUIDITY_AMOUNT": 100000,
-            "CURRENT_RANGE_LIQUIDITY_RANGE_OFFSET": 0.05,
-            "CURRENT_RANGE_LIQUIDITY_ADJUST_THRESHOLD": 0.01
+            "LIQUIDITY_AMOUNT": 100000,
+            "LIQUIDITY_RANGE_OFFSET": 0.05,
+            "LIQUIDITY_ADJUST_THRESHOLD": 0.01
         },
         "vETH": {
             "IS_ENABLED": true,
-            "CURRENT_RANGE_LIQUIDITY_AMOUNT": 100000,
-            "CURRENT_RANGE_LIQUIDITY_RANGE_OFFSET": 0.05,
-            "CURRENT_RANGE_LIQUIDITY_ADJUST_THRESHOLD": 0.01
+            "LIQUIDITY_AMOUNT": 100000,
+            "LIQUIDITY_RANGE_OFFSET": 0.05,
+            "LIQUIDITY_ADJUST_THRESHOLD": 0.01
         }
     }
 }
