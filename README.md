@@ -1,6 +1,6 @@
 # Perp Maker
 
-A simple maker strategy for perpetual protocol v2. Please note that it uses a basic strategy and serves as a template to create your own maker strategy. Use it at your own risk!
+A simple maker strategy for perpetual protocol v2. Please note that it uses a basic strategy and serves as a template for developers to create their own maker strategy. Use it at your own risk!
 
 ## Requirement
 
