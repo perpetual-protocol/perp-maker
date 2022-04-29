@@ -14,7 +14,6 @@ interface Market {
     baseToken: string
     poolAddr: string
     tickSpacing: number
-    isInHedgingProcess: boolean
     // config
     // maker
     currentRangeLiquidityAmount: Big
@@ -65,7 +64,6 @@ export class Maker extends BotService {
                 baseToken: pool.baseAddress,
                 poolAddr: pool.address,
                 tickSpacing: await this.perpService.getTickSpacing(pool.address),
-                isInHedgingProcess: false,
                 // config
                 // maker
                 currentRangeLiquidityAmount: Big(market.CURRENT_RANGE_LIQUIDITY_AMOUNT),
@@ -140,7 +138,10 @@ export class Maker extends BotService {
             }
             default: {
                 // abnormal case, remove all current range orders manually
-                await this.log.jerror({ event: "RefreshCurrentRangeOrderError", params: { openOrders } })
+                await this.log.jerror({
+                    event: "RefreshOrderError",
+                    params: { err: new Error("RefreshOrderError"), openOrders },
+                })
                 //await Promise.all(currentRangeOrders.map(order => this.removeCurrentRangeOrder(market, order)))
                 process.exit(0)
             }
@@ -185,7 +186,7 @@ export class Maker extends BotService {
         })
         const quote = currentRangeLiquidityAmount.div(2)
         const base = currentRangeLiquidityAmount.div(2).div(marketPrice)
-        await this.addLiquidity(this.wallet, market.baseToken, lowerTick, upperTick, base, quote)
+        await this.addLiquidity(this.wallet, market.baseToken, lowerTick, upperTick, base, quote, false)
         const newOpenOrder = await this.perpService.getOpenOrder(
             this.wallet.address,
             market.baseToken,
@@ -196,6 +197,8 @@ export class Maker extends BotService {
             upperTick: upperTick,
             lowerTick: lowerTick,
             liquidity: newOpenOrder.liquidity,
+            baseDebt: newOpenOrder.baseDebt,
+            quoteDebt: newOpenOrder.quoteDebt,
         }
     }
 

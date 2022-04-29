@@ -14,15 +14,16 @@ Since maker strategy will adjust your order, please make sure there's only 0 or 
 ```bash
 git clone https://github.com/perpetual-protocol/perp-maker.git
 cd perp-maker
-npm i
+npm i --legacy-peer-deps
 npm run build
 ```
 
 ## Configuration
 
-#### Config File: `perp-maker/packages/maker/src/configs/config.json`
+#### Config File: `perp-maker/src/configs/config.json`
 
 -   `PRICE_CHECK_INTERVAL_SEC`: the frequency to check price in second
+-   `ADJUST_MAX_GAS_PRICE_GWEI`: the maximum gas fee in Gwei to adjust order. If gas price exceeds this number, the order won't be adjusted
 -   `IS_ENABLED`: set to `true` to enable this market
 -   `CURRENT_RANGE_LIQUIDITY_AMOUNT`: how many amount of USD (after leverage) to provide in the current range order
 -   `CURRENT_RANGE_LIQUIDITY_RANGE_OFFSET`: the offset to upper price and lower price of current range. ex: if set to 0.05, it will provide a +-5% range order around market price
@@ -34,7 +35,7 @@ npm run build
 # remember to update config before running
 # provide ENVs:
 # L2_WEB3_ENDPOINT: web3 endpoint
-# NETWORK: arbitrum-rinkeby or rinkeby
+# NETWORK: optimism or optimism-kovan
 # PRIVATE_KEY: your private key
 npm start
 ```
@@ -43,5 +44,5 @@ npm start
 
 ```bash
 docker build -f maker.Dockerfile -t perp-maker .
-docker run -e L2_WEB3_ENDPOINT=<ENDPOINT> -e NETWORK=<arbitrum-rinkeby or rinkeby> -e PRIVATE_KEY=<YOUR_PRIVATE_KEY> perp-maker
+docker run -e L2_WEB3_ENDPOINT=<ENDPOINT> -e NETWORK=<optimism or optimism-kovan> -e PRIVATE_KEY=<YOUR_PRIVATE_KEY> perp-maker
 ```
