@@ -19,7 +19,7 @@ npm run build
 ```
 
 ## Configuration
-
+Remember to update config before running.
 #### Config File: `perp-maker/src/configs/config.json`
 
 -   `PRICE_CHECK_INTERVAL_SEC`: the frequency to check price in second
@@ -29,14 +29,18 @@ npm run build
 -   `CURRENT_RANGE_LIQUIDITY_RANGE_OFFSET`: the offset to upper price and lower price of current range. ex: if set to 0.05, it will provide a +-5% range order around market price
 -   `CURRENT_RANGE_LIQUIDITY_ADJUST_THRESHOLD`: the offset to adjust range order. ex: if set to 0.01, it will adjust current range order when the price is 1% closed to upper price and lower price
 
+
+## Environment Variables
+
+```bash
+L2_WEB3_ENDPOINTS={endpoint1},{endpoint2},...
+NETWORK=optimism or optimism-kovan
+PRIVATE_KEY={your private key}
+```
+
 ## Run
 
 ```bash
-# remember to update config before running
-# provide ENVs:
-# L2_WEB3_ENDPOINT: web3 endpoint
-# NETWORK: optimism or optimism-kovan
-# PRIVATE_KEY: your private key
 npm start
 ```
 
