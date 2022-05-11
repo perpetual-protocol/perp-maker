@@ -69,3 +69,25 @@ $ env $(cat .env | grep -v '#' | xargs) npm run start
 $ docker build -f maker.Dockerfile -t perp-maker .
 $ docker run --env-file ./.env perp-maker
 ```
+
+## Deployment
+
+### AWS Lambda
+
+Prerequisite
+
+-   `~/.aws/credentials` should have default profile with `aws_access_key_id` and `aws_secret_access_key`
+-   Fill in envs in `.env.staging`
+
+Deploy
+
+```bash
+npm run build
+npm run sls:deploy:staging
+```
+
+See CloudWatch log
+
+```bash
+AWS_REGION=${YOUR_REGION} npm run sls:log:staging
+```

@@ -80,7 +80,7 @@ export class Maker extends BotService {
             await this.approve(this.wallet, balance)
             await this.deposit(this.wallet, balance)
         }
-        this.makerRoutine()
+        await this.makerRoutine()
     }
 
     async makerRoutine() {
