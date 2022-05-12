@@ -4,10 +4,9 @@ A simple maker strategy for perpetual protocol v2. Please note that it uses a ba
 
 ## Requirement
 
--   `npm >= 7`
--   `nodejs >= 16`
-
-Since maker strategy will adjust your order, please make sure there's only 0 or 1 order in the account.
+- `npm >= 7`
+- `nodejs >= 16`
+- Since maker strategy will adjust your order, please make sure there's only 0 or 1 order in the account.
 
 ## Installation
 
