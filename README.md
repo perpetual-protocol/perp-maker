@@ -1,4 +1,4 @@
-<img width="1012" alt="open-source collateral liquidator 4" src="https://user-images.githubusercontent.com/105896/168986674-3b7169c1-c8ad-45dc-9d40-3653ff2766f4.png">
+<img width="1012" alt="maker" src="https://user-images.githubusercontent.com/105896/168986674-3b7169c1-c8ad-45dc-9d40-3653ff2766f4.png">
 
 # Perp Maker
 
