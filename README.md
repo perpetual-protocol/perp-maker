@@ -1,3 +1,5 @@
+<img width="1012" alt="open-source collateral liquidator 4" src="https://user-images.githubusercontent.com/105896/168986674-3b7169c1-c8ad-45dc-9d40-3653ff2766f4.png">
+
 # Perp Maker
 
 A simple maker strategy for perpetual protocol v2. Please note that it uses a basic strategy and serves as a template for developers to create their own maker strategy. Use it at your own risk!
