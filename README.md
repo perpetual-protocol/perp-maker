@@ -36,10 +36,12 @@ Edit the trading parameters in `src/configs/config.json`:
             // how many amount of USD (after leverage) to provide in the liquidity
             "LIQUIDITY_AMOUNT": 0,
 
-            // the offset to upper price and lower price of the liquidity range. ex: if set to 0.05, it will provide liquidity with range [current price / 1.05, current price * 1.05]
+            // the offset to upper price and lower price of the liquidity range.
+            // e.g. if set to 0.5, it will provide liquidity with range [current price / 1.5, current price * 1.5]
             "LIQUIDITY_RANGE_OFFSET": 0.5,
 
-            // the offset to adjust range liquidity. ex: if set to 0.01, it will adjust liquidity when the current price goes out of the range [market price / 1.01, market price * 1.01]
+            // the offset to adjust range liquidity.
+            // e.g. if set to 0.1, it will adjust liquidity when the current price goes out of the range [market price / 1.1, market price * 1.1]
             "LIQUIDITY_ADJUST_THRESHOLD": 0.1
         },
     }
