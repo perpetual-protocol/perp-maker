@@ -28,6 +28,7 @@ export class Maker extends BotService {
     private wallet!: ethers.Wallet
     private marketMap: { [key: string]: Market } = {}
     private marketOrderMap: { [key: string]: OpenOrder } = {}
+    private referralCode: string | null = null
 
     async setup(): Promise<void> {
         this.log.jinfo({
@@ -40,11 +41,24 @@ export class Maker extends BotService {
         this.wallet = this.ethService.privateKeyToWallet(privateKey)
         await this.createNonceMutex([this.wallet])
         await this.createMarketMap()
+
+        try {
+            this.referralCode = await this.perpService.getReferralCode(this.wallet.address)
+        } catch (err: any) {
+            if (err.message && err.message.includes("You do not have a referral code")) {
+                this.log.jinfo({ event: "NoReferralCode" })
+            } else {
+                await this.log.jerror({ event: "GetReferralCodeError", params: { err } })
+            }
+            this.referralCode = "perpmaker"
+        }
+
         this.log.jinfo({
             event: "Maker",
             params: {
                 address: this.wallet.address,
                 nextNonce: this.addrNonceMutexMap[this.wallet.address].nextNonce,
+                referralCode: this.referralCode,
             },
         })
     }
@@ -218,7 +232,7 @@ export class Maker extends BotService {
             openOrder.upperTick,
             openOrder.liquidity,
         )
-        await this.closePosition(this.wallet, market.baseToken)
+        await this.closePosition(this.wallet, market.baseToken, undefined, undefined, undefined, this.referralCode)
     }
 
     async adjustLiquidity(market: Market): Promise<void> {
