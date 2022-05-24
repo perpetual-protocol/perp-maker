@@ -45,10 +45,12 @@ export class Maker extends BotService {
         try {
             this.referralCode = await this.perpService.getReferralCode(this.wallet.address)
         } catch (err: any) {
-            if (err.message && err.message.includes("You do not have a referral code")) {
-                this.log.jinfo({ event: "NoReferralCode" })
-            } else {
-                await this.log.jerror({ event: "GetReferralCodeError", params: { err } })
+            if (this.perpService.serverProfile.stage === "production") {
+                if (err.message && err.message.includes("You do not have a referral code")) {
+                    this.log.jinfo({ event: "NoReferralCode" })
+                } else {
+                    await this.log.jerror({ event: "GetReferralCodeError", params: { err } })
+                }
             }
             this.referralCode = "perpmaker"
         }
