@@ -4,6 +4,7 @@ plugins:
     - serverless-plugin-log-retention
     - serverless-webpack
     - serverless-deployment-bucket
+    - serverless-step-functions
 
 useDotenv: true
 
@@ -43,11 +44,35 @@ custom:
 
 functions:
     main:
-        timeout: 60
+        timeout: 120
         handler: build/index.main
         reservedConcurrency: 1
         maximumRetryAttempts: 0
-        events:
-            - schedule:
-                  rate: rate(1 minute)
-                  enabled: true
+
+stepFunctions:
+    stateMachines:
+        perpMakerLoop:
+            name: perpMakerLoop-${opt:stage}
+            definition:
+                Comment: Perp maker loop
+                StartAt: Lambda Invoke
+                States:
+                    Lambda Invoke:
+                        Type: Task
+                        Resource: !GetAtt main.Arn
+                        OutputPath: "$.Payload"
+                        Parameters:
+                            Payload.$: "$"
+                        # Retry:
+                        #     - ErrorEquals:
+                        #         - Lambda.ServiceException
+                        #         - Lambda.AWSLambdaException
+                        #         - Lambda.SdkClientException
+                        #     IntervalSeconds: 2
+                        #     MaxAttempts: 6
+                        #     BackoffRate: 2
+                        Next: Wait
+                    Wait:
+                        Type: Wait
+                        Seconds: 20
+                        Next: Lambda Invoke

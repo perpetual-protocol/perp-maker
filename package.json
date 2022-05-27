@@ -27,6 +27,7 @@
         "serverless": "3.18.2",
         "serverless-deployment-bucket": "^1.6.0",
         "serverless-plugin-log-retention": "2.0.0",
+        "serverless-step-functions": "^3.7.0",
         "serverless-webpack": "5.7.0",
         "ts-node": "10.1.0",
         "typechain": "5.1.2",
