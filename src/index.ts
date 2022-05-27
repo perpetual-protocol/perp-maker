@@ -8,8 +8,8 @@ import { Maker } from "./maker/Maker"
 initLog()
 
 export async function main(): Promise<void> {
-    process.env["STAGE"] = "production"
-    process.env["NETWORK"] = "optimism"
+    // process.env["STAGE"] = "production"
+    // process.env["NETWORK"] = "optimism"
 
     // crash fast on uncaught errors
     const exitUncaughtError = async (err: any): Promise<void> => {

@@ -6,9 +6,10 @@
     "scripts": {
         "start": "ts-node src/index.ts",
         "build": "tsc -b .",
-        "sls:deploy:staging": "sls deploy --stage staging",
+        "sls:deploy": "sls deploy",
         "sls:invoke:local": "sls invoke local --stage staging --function main",
-        "sls:log:staging": "awslogs get -w /aws/lambda/perp-maker-staging-main --start=\"5m\""
+        "sls:log:staging": "awslogs get -w /aws/lambda/perp-maker-staging-main --start=\"5m\"",
+        "deploy:local:staging": "npm run build && sls deploy --stage staging --aws-profile growth-backend-staging-deployer"
     },
     "dependencies": {
         "@perp/common": "0.1.12"

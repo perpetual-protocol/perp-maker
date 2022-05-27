@@ -4,9 +4,9 @@ A simple maker strategy for perpetual protocol v2. Please note that it uses a ba
 
 ## Requirement
 
-- `npm >= 7`
-- `nodejs >= 16`
-- Since maker strategy will adjust your order, please make sure there's only 0 or 1 order in the account.
+-   `npm >= 7`
+-   `nodejs >= 16`
+-   Since maker strategy will adjust your order, please make sure there's only 0 or 1 order in the account.
 
 ## Installation
 
@@ -17,8 +17,8 @@ $ npm install
 $ npm run build
 ```
 
-
 ## Configuration
+
 Edit the trading parameters in `src/configs/config.json`:
 
 ```javascript
@@ -47,6 +47,7 @@ Edit the trading parameters in `src/configs/config.json`:
 ```
 
 ## Environment Variables
+
 Provide your endpoint(s) and wallet private key in `.env`:
 
 ```bash
@@ -77,7 +78,8 @@ $ docker run --env-file ./.env perp-maker
 Prerequisite
 
 -   `~/.aws/credentials` should have default profile with `aws_access_key_id` and `aws_secret_access_key`
--   Fill in envs in `.env.staging`
+-   copy `.env.example` to `.env`
+-   Fill in envs in `.env`
 
 Deploy
 

@@ -84,7 +84,7 @@ export class Maker extends BotService {
     }
 
     async makerRoutine() {
-        while (true) {
+        do {
             // TODO: use Promise.all()
             for (const market of Object.values(this.marketMap)) {
                 try {
@@ -107,7 +107,7 @@ export class Maker extends BotService {
                 }
             }
             await sleep(config.PRICE_CHECK_INTERVAL_SEC * 1000)
-        }
+        } while (!process.env.IS_LAMBDA)
     }
 
     async refreshOrders(market: Market) {
