@@ -12,7 +12,7 @@ WORKDIR /home/perp
 COPY --chown=perp:perp ./src ./src/
 COPY --chown=perp:perp ./package*.json ./
 COPY --chown=perp:perp ./tsconfig.json ./
-RUN npm ci --verbose
+RUN npm ci
 RUN npm run build
 
 #
