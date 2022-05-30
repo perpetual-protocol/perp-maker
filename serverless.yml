@@ -1,9 +1,8 @@
-service: perp-maker-10
+service: perp-maker
 
 plugins:
     - serverless-plugin-log-retention
     - serverless-webpack
-    - serverless-deployment-bucket
 
 useDotenv: true
 
@@ -14,10 +13,6 @@ provider:
     versionFunctions: false
     stage: ${opt:stage, 'production'}
     region: ${env:AWS_REGION}
-    deploymentBucket:
-        blockPublicAccess: true
-        name: perp-serverless-deployment-${opt:stage, 'staging'}
-        serverSideEncryption: AES256
     environment:
         STAGE: ${opt:stage, 'production'}
         NETWORK: ${env:NETWORK}
@@ -31,14 +26,6 @@ custom:
         webpackConfig: "webpack.config.js"
         includeModules: false
         packager: "npm"
-
-    deploymentBucket:
-        versioning: true
-        accelerate: true # this is required
-        blockPublicAccess: true
-        tags:
-            - Key: Environment
-              Value: ${opt:stage, 'staging'}
 
 functions:
     main:

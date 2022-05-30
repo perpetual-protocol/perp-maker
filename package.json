@@ -7,9 +7,8 @@
         "start": "ts-node src/index.ts",
         "build": "tsc -b .",
         "sls:deploy": "sls deploy",
-        "sls:invoke:local": "sls invoke local --stage staging --function main",
-        "sls:log:staging": "awslogs get -w /aws/lambda/perp-maker-staging-main --start=\"5m\"",
-        "deploy:local:staging": "npm run build && sls deploy --stage staging"
+        "sls:invoke:local": "sls invoke local --function main",
+        "sls:log": "awslogs get -w /aws/lambda/perp-maker-main --start=\"5m\""
     },
     "dependencies": {
         "@perp/common": "0.1.12",
@@ -25,7 +24,6 @@
         "prettier": "2.3.2",
         "prettier-plugin-import-sort": "0.0.7",
         "serverless": "3.18.2",
-        "serverless-deployment-bucket": "^1.6.0",
         "serverless-plugin-log-retention": "2.0.0",
         "serverless-webpack": "5.7.0",
         "ts-node": "10.1.0",
