@@ -8,16 +8,15 @@ useDotenv: true
 
 provider:
     name: aws
-    runtime: nodejs14.x
+    runtime: nodejs16.x
     memorySize: 512
     versionFunctions: false
-    stage: ${opt:stage, 'staging'}
-    region: ${env:REGION}
+    stage: ${opt:stage, 'production'}
+    region: ${env:AWS_REGION}
     environment:
-        STAGE: ${opt:stage, 'staging'}
-        REGION: ${env:REGION}
+        STAGE: ${opt:stage, 'production'}
         NETWORK: ${env:NETWORK}
-        L2_WEB3_ENDPOINT: ${env:L2_WEB3_ENDPOINT}
+        L2_WEB3_ENDPOINTS: ${env:L2_WEB3_ENDPOINTS}
         PRIVATE_KEY: ${env:PRIVATE_KEY}
 
 custom:
@@ -30,7 +29,7 @@ custom:
 
 functions:
     main:
-        timeout: 60
+        timeout: 300
         handler: build/index.main
         reservedConcurrency: 1
         maximumRetryAttempts: 0

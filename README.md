@@ -17,7 +17,6 @@ $ npm install
 $ npm run build
 ```
 
-
 ## Configuration
 Edit the trading parameters in `src/configs/config.json`:
 
@@ -77,7 +76,8 @@ $ docker run --env-file ./.env perp-maker
 Prerequisite
 
 -   `~/.aws/credentials` should have default profile with `aws_access_key_id` and `aws_secret_access_key`
--   Fill in envs in `.env.staging`
+-   copy `.env.example` to `.env`
+-   Fill in envs in `.env`
 
 Deploy
 

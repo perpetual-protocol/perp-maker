@@ -9,9 +9,9 @@ USER perp
 
 # Copy npm install dependencies so we can cache the results independently.
 WORKDIR /home/perp
-COPY --chown=perp:perp ./src ./src
-COPY --chown=perp:perp ./package*.json .
-COPY --chown=perp:perp ./tsconfig.json .
+COPY --chown=perp:perp ./src ./src/
+COPY --chown=perp:perp ./package*.json ./
+COPY --chown=perp:perp ./tsconfig.json ./
 RUN npm ci --quiet
 RUN npm run build
 
