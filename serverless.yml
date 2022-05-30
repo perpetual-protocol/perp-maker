@@ -1,10 +1,9 @@
-service: growth-perp-maker
+service: perp-maker-10
 
 plugins:
     - serverless-plugin-log-retention
     - serverless-webpack
     - serverless-deployment-bucket
-    - serverless-step-functions
 
 useDotenv: true
 
@@ -24,7 +23,6 @@ provider:
         NETWORK: ${env:NETWORK}
         L2_WEB3_ENDPOINTS: ${env:L2_WEB3_ENDPOINTS}
         PRIVATE_KEY: ${env:PRIVATE_KEY}
-        IS_LAMBDA: 1
 
 custom:
     logRetentionInDays: 30
@@ -44,35 +42,11 @@ custom:
 
 functions:
     main:
-        timeout: 120
+        timeout: 300
         handler: build/index.main
         reservedConcurrency: 1
         maximumRetryAttempts: 0
-
-stepFunctions:
-    stateMachines:
-        perpMakerLoop:
-            name: perpMakerLoop-${opt:stage}
-            definition:
-                Comment: Perp maker loop
-                StartAt: Lambda Invoke
-                States:
-                    Lambda Invoke:
-                        Type: Task
-                        Resource: !GetAtt main.Arn
-                        OutputPath: "$.Payload"
-                        Parameters:
-                            Payload.$: "$"
-                        # Retry:
-                        #     - ErrorEquals:
-                        #         - Lambda.ServiceException
-                        #         - Lambda.AWSLambdaException
-                        #         - Lambda.SdkClientException
-                        #     IntervalSeconds: 2
-                        #     MaxAttempts: 6
-                        #     BackoffRate: 2
-                        Next: Wait
-                    Wait:
-                        Type: Wait
-                        Seconds: 20
-                        Next: Lambda Invoke
+        events:
+            - schedule:
+                  rate: rate(1 minute)
+                  enabled: true
