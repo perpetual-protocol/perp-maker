@@ -14,8 +14,6 @@ provider:
     stage: ${opt:stage, 'production'}
     region: ${env:AWS_REGION}
     environment:
-        STAGE: ${opt:stage, 'production'}
-        NETWORK: ${env:NETWORK}
         L2_WEB3_ENDPOINTS: ${env:L2_WEB3_ENDPOINTS}
         PRIVATE_KEY: ${env:PRIVATE_KEY}
 

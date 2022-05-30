@@ -83,11 +83,11 @@ Deploy
 
 ```bash
 npm run build
-npm run sls:deploy:staging
+npm run sls:deploy
 ```
 
 See CloudWatch log
 
 ```bash
-AWS_REGION=${YOUR_REGION} npm run sls:log:staging
+AWS_REGION=${YOUR_REGION} npm run sls:log
 ```
