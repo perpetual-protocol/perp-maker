@@ -85,9 +85,3 @@ Deploy
 npm run build
 npm run sls:deploy
 ```
-
-See CloudWatch log
-
-```bash
-AWS_REGION=${YOUR_REGION} npm run sls:log
-```

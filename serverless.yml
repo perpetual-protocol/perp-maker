@@ -8,11 +8,12 @@ useDotenv: true
 
 provider:
     name: aws
+    stackName: ${self:service}
     runtime: nodejs16.x
     memorySize: 512
     versionFunctions: false
     stage: ${opt:stage, 'production'}
-    region: ${env:AWS_REGION}
+    region: ${env:AWS_REGION, 'us-east-1'}
     environment:
         L2_WEB3_ENDPOINTS: ${env:L2_WEB3_ENDPOINTS}
         PRIVATE_KEY: ${env:PRIVATE_KEY}
@@ -27,6 +28,7 @@ custom:
 
 functions:
     main:
+        name: ${self:service}-main
         timeout: 300
         handler: build/index.main
         reservedConcurrency: 1
