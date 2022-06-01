@@ -7,8 +7,7 @@
         "start": "ts-node src/index.ts",
         "build": "tsc -b .",
         "sls:deploy": "sls deploy",
-        "sls:invoke:local": "sls invoke local --function main",
-        "sls:log": "awslogs get -w /aws/lambda/perp-maker-main --start=\"5m\""
+        "sls:invoke:local": "sls invoke local --function main"
     },
     "dependencies": {
         "@perp/common": "0.1.12",
