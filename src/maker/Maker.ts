@@ -178,7 +178,13 @@ export class Maker extends BotService {
         const buyingPower = await this.perpService.getBuyingPower(this.wallet.address)
         const liquidityAmount = min([market.liquidityAmount, buyingPower])
         if (liquidityAmount.lte(0)) {
-            this.log.jwarn({ event: "NoBuyingPowerToCreateOrder", params: { buyingPower: +buyingPower } })
+            this.log.jwarn({
+                event: "NoBuyingPowerToCreateOrder",
+                params: {
+                    market: market.name,
+                    buyingPower: +buyingPower,
+                },
+            })
             throw Error("NoBuyingPowerToCreateOrder")
         }
 
