@@ -15,7 +15,7 @@ A simple maker strategy for perpetual protocol v2. Please note that it uses a ba
 ```bash
 $ git clone https://github.com/perpetual-protocol/perp-maker.git
 $ cd perp-maker
-$ npm install
+$ npm install --leagacy-peers-dep
 $ npm run build
 ```
 
