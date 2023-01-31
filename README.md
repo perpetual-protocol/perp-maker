@@ -63,7 +63,20 @@ L2_WEB3_ENDPOINTS={ENDPOINT1,ENDPOINT2,...}
 
 # secrets
 PRIVATE_KEY={WALLET_PRIVATE_KEY}
+
+# stage
+STAGE=["production"|"staging"]
+
+# network
+NETWORK=["optimism"|"optimism-goerli"]
 ```
+
+## Market Metadata
+We have different markets between optimism and optimism-goerli.
+
+Please check the market metadata in the following links:
+- [optimism metadata](https://metadata.perp.exchange/v2/core/optimism.json)
+- [optimism-goerli metadata](https://metadata.perp.exchange/v2/core/optimism-goerli.json)
 
 ## Run
 
