@@ -238,7 +238,7 @@ export class Maker extends BotService {
             openOrder.upperTick,
             openOrder.liquidity,
         )
-        await this.closePosition(this.wallet, market.baseToken, undefined, undefined, undefined, this.referralCode)
+        await this.closePosition(this.wallet, market.baseToken, undefined, undefined, this.referralCode)
     }
 
     async adjustLiquidity(market: Market): Promise<void> {
