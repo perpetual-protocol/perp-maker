@@ -14,8 +14,7 @@
         "sls:invoke:local": "sls invoke local --function main"
     },
     "dependencies": {
-        "@perp/common": "0.1.12",
-        "methods": "^1.1.2"
+        "@perp/common": "0.1.14"
     },
     "devDependencies": {
         "@typechain/ethers-v5": "7.0.1",
@@ -26,9 +25,10 @@
         "import-sort-style-module": "6.0.0",
         "prettier": "2.3.2",
         "prettier-plugin-import-sort": "0.0.7",
-        "serverless": "3.18.2",
+        "serialize-error": "8.1.0",
+        "serverless": "3.25.1",
         "serverless-plugin-log-retention": "2.0.0",
-        "serverless-webpack": "5.7.0",
+        "serverless-webpack": "5.11.0",
         "ts-node": "10.1.0",
         "typechain": "5.1.2",
         "typescript": "4.3.5"
