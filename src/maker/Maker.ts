@@ -1,3 +1,4 @@
+import { parseUnits } from "@ethersproject/units"
 import { min } from "@perp/common/build/lib/bn"
 import { priceToTick, sleep, tickToPrice } from "@perp/common/build/lib/helper"
 import { Log } from "@perp/common/build/lib/loggers"
@@ -5,6 +6,7 @@ import { BotService } from "@perp/common/build/lib/perp/BotService"
 import { OpenOrder } from "@perp/common/build/lib/perp/PerpService"
 import Big from "big.js"
 import { ethers } from "ethers"
+import { CallOverrides } from "ethers"
 import { Service } from "typedi"
 
 import config from "../configs/config.json"
@@ -29,6 +31,11 @@ export class Maker extends BotService {
     private marketMap: { [key: string]: Market } = {}
     private marketOrderMap: { [key: string]: OpenOrder } = {}
     private referralCode: string | null = null
+
+    private readonly defaultOverrides: CallOverrides = {
+        maxFeePerGas: parseUnits("10", "gwei"),
+        maxPriorityFeePerGas: parseUnits("0.001", "gwei"),
+    }
 
     async setup(): Promise<void> {
         this.log.jinfo({
@@ -206,7 +213,16 @@ export class Maker extends BotService {
         })
         const quote = liquidityAmount.div(2)
         const base = liquidityAmount.div(2).div(marketPrice)
-        await this.addLiquidity(this.wallet, market.baseToken, lowerTick, upperTick, base, quote, false)
+        await this.addLiquidity(
+            this.wallet,
+            market.baseToken,
+            lowerTick,
+            upperTick,
+            base,
+            quote,
+            false,
+            this.defaultOverrides,
+        )
         const newOpenOrder = await this.perpService.getOpenOrder(
             this.wallet.address,
             market.baseToken,
@@ -237,8 +253,9 @@ export class Maker extends BotService {
             openOrder.lowerTick,
             openOrder.upperTick,
             openOrder.liquidity,
+            this.defaultOverrides,
         )
-        await this.closePosition(this.wallet, market.baseToken, undefined, undefined, this.referralCode)
+        await this.closePosition(this.wallet, market.baseToken, this.defaultOverrides, undefined, this.referralCode)
     }
 
     async adjustLiquidity(market: Market): Promise<void> {
