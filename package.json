@@ -14,7 +14,8 @@
         "sls:invoke:local": "sls invoke local --function main"
     },
     "dependencies": {
-        "@perp/common": "0.1.14"
+        "@perp/common": "0.1.14",
+        "ethers": "5.7.2"
     },
     "devDependencies": {
         "@typechain/ethers-v5": "7.0.1",
